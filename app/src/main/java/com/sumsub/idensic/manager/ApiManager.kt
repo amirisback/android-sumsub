@@ -1,6 +1,10 @@
 package com.sumsub.idensic.manager
 
+import com.chuckerteam.chucker.api.ChuckerCollector
+import com.chuckerteam.chucker.api.ChuckerInterceptor
+import com.chuckerteam.chucker.api.RetentionManager
 import com.google.gson.Gson
+import com.sumsub.idensic.App
 import com.sumsub.idensic.BuildConfig
 import com.sumsub.idensic.model.AccessTokenResponse
 import com.sumsub.idensic.network.ApiService
@@ -24,8 +28,17 @@ class ApiManager(private val apiUrl: String, isSandBox: () -> Boolean, clientId:
     private val gson: Gson by lazy { Gson() }
 
     private val okHttpClient: OkHttpClient by lazy {
+
+        val chuck = ChuckerInterceptor.Builder(App.getContext())
+            .collector(ChuckerCollector(App.getContext()))
+            .maxContentLength(250000L)
+            .redactHeaders(emptySet())
+            .alwaysReadResponseBody(false)
+            .build()
+
         OkHttpClient.Builder()
             .addInterceptor(DemoHeadersInterceptor(isSandBox, clientId))
+            .addInterceptor(chuck)
             .addInterceptor(HttpLoggingInterceptor().apply {
                 level =
                     if (BuildConfig.DEBUG)
